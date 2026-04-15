@@ -25,6 +25,7 @@ export function Navbar() {
             <NavLink href="/tim-kiem?type=BAN" active={pathname.includes("BAN")}>Mua nhà</NavLink>
             <NavLink href="/tim-kiem?type=THUE" active={pathname.includes("THUE")}>Thuê nhà</NavLink>
             <NavLink href="/dinh-gia" active={pathname === "/dinh-gia"}>Định giá</NavLink>
+            <NavLink href="/tin-tuc" active={pathname.includes("/tin-tuc")}>Tin tức</NavLink>
           </nav>
 
           <div className="flex items-center gap-3">

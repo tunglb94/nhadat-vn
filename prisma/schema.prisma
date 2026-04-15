@@ -1,0 +1,194 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────────────────────
+
+enum UserRole {
+  USER    // người tìm mua/thuê
+  AGENT   // môi giới chuyên nghiệp
+  ADMIN
+}
+
+enum ListingType {
+  BAN     // bán
+  THUE    // cho thuê
+}
+
+enum PropertyType {
+  NHA_PHO
+  CAN_HO
+  BIET_THU
+  DAT_NEN
+  MAT_BANG
+  PHONG_TRO
+}
+
+enum ListingStatus {
+  DRAFT     // đang soạn, chưa gửi
+  PENDING   // chờ duyệt
+  ACTIVE    // đang hiển thị
+  SOLD      // đã bán / đã cho thuê
+  EXPIRED   // hết hạn 60 ngày
+  REJECTED  // bị từ chối (tin ảo)
+}
+
+// ─────────────────────────────────────────────────────────────
+// User
+// ─────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified DateTime?
+  phone         String?
+  avatar        String?
+  role          UserRole  @default(USER)
+
+  // Relations
+  listings      Listing[]
+  savedListings SavedListing[]
+  leads         Lead[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// ─────────────────────────────────────────────────────────────
+// Listing (tin đăng)
+// ─────────────────────────────────────────────────────────────
+
+model Listing {
+  id           String        @id @default(cuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Nội dung chính
+  title        String
+  slug         String        @unique
+  description  String        @db.Text
+  type         ListingType
+  propertyType PropertyType
+  status       ListingStatus @default(PENDING)
+
+  // Giá & diện tích
+  price        Float         // VND
+  area         Float         // m²
+  pricePerM2   Float?        // tự tính: price / area
+  bedrooms     Int?
+  bathrooms    Int?
+  floors       Int?
+  direction    String?       // "Đông", "Tây Nam"...
+
+  // Địa chỉ (lưu cả text lẫn tọa độ)
+  province     String        // "Hồ Chí Minh"
+  district     String        // "Quận 7"
+  ward         String?       // "Phường Tân Phú"
+  street       String?       // "Nguyễn Thị Thập"
+  address      String        // địa chỉ đầy đủ để hiển thị
+  lat          Float?        // GPS latitude
+  lng          Float?        // GPS longitude
+
+  // Hệ thống verify (3 lớp)
+  verified     Boolean       @default(false)
+  verifiedAt   DateTime?
+  gpsVerified  Boolean       @default(false)  // ảnh có EXIF GPS khớp địa chỉ
+  priceFlag    Boolean       @default(false)  // giá thấp bất thường (>30% dưới TB khu vực)
+  reportCount  Int           @default(0)      // số lần bị report tin ảo
+
+  // SEO & thống kê
+  views        Int           @default(0)
+  contactCount Int           @default(0)
+
+  // Hết hạn tự động sau 60 ngày
+  expiresAt    DateTime?
+
+  // Relations
+  images       ListingImage[]
+  leads        Lead[]
+  savedBy      SavedListing[]
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  // Indexes cho các query phổ biến nhất
+  @@index([province, district])
+  @@index([type, propertyType, status])
+  @@index([price])
+  @@index([area])
+  @@index([status, createdAt(sort: Desc)])
+  @@index([lat, lng])
+  @@index([userId])
+  @@index([slug])
+}
+
+// ─────────────────────────────────────────────────────────────
+// ListingImage
+// ─────────────────────────────────────────────────────────────
+
+model ListingImage {
+  id        String  @id @default(cuid())
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  url       String  // Cloudflare R2 URL
+  order     Int     @default(0)  // thứ tự hiển thị
+  width     Int?
+  height    Int?
+  isCover   Boolean @default(false) // ảnh đại diện
+
+  @@index([listingId, order])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Lead (khách liên hệ)
+// ─────────────────────────────────────────────────────────────
+
+model Lead {
+  id        String   @id @default(cuid())
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  // userId null nếu chưa đăng nhập
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // Thông tin khách
+  name      String
+  phone     String
+  message   String?  @db.Text
+  source    String   @default("phone") // "phone" | "zalo" | "chat"
+
+  isRead    Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([listingId, createdAt(sort: Desc)])
+  @@index([userId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// SavedListing (tin yêu thích)
+// ─────────────────────────────────────────────────────────────
+
+model SavedListing {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  // Mỗi user chỉ lưu 1 lần mỗi tin
+  @@unique([userId, listingId])
+  @@index([userId, createdAt(sort: Desc)])
+}

@@ -35,7 +35,7 @@ const STATS = [
 const CATEGORIES = [
   { href: "/tim-kiem?type=BAN&propertyType=NHA_PHO",   title: "Nhà Phố", count: "4,231 tin", image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=800&auto=format&fit=crop" },
   { href: "/tim-kiem?type=BAN&propertyType=CAN_HO",    title: "Căn Hộ Cao Cấp", count: "8,102 tin", image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=800&auto=format&fit=crop" },
-  { href: "/tim-kiem?type=BAN&propertyType=BIET_THU",  title: "Biệt Thự", count: "1,420 tin", image: "https://images.unsplash.com/photo-1613490908653-b7cfbf92afce?q=80&w=800&auto=format&fit=crop" },
+  { href: "/tim-kiem?type=BAN&propertyType=BIET_THU",  title: "Biệt Thự", count: "1,420 tin", image: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?q=80&w=800&auto=format&fit=crop" },
   { href: "/tim-kiem?type=BAN&propertyType=DAT_NEN",   title: "Đất Nền Dự Án", count: "3,514 tin", image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=800&auto=format&fit=crop" },
 ];
 

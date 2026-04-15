@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import type { SearchParams, SearchResult, ListingCardData } from "@/types/listing";
-import { ListingStatus } from "@prisma/client";
+import { ListingStatus, Prisma } from "@prisma/client";
 
 const PAGE_SIZE = 20;
 
@@ -20,7 +20,7 @@ export async function searchListings(params: SearchParams): Promise<SearchResult
     sort = "newest",
   } = params;
 
-  const where: Parameters<typeof db.listing.findMany>[0]["where"] = {
+  const where: Prisma.ListingWhereInput = {
     status: ListingStatus.ACTIVE,
     expiresAt: { gt: new Date() },
   };
@@ -64,13 +64,14 @@ export async function searchListings(params: SearchParams): Promise<SearchResult
     ];
   }
 
-  // Sắp xếp
-  const orderBy: Parameters<typeof db.listing.findMany>[0]["orderBy"] = (() => {
+  // Sắp xếp — luôn có id làm tiebreaker để pagination ổn định
+  // (khi nhiều listing có cùng createdAt, PostgreSQL không đảm bảo thứ tự)
+  const orderBy: Prisma.ListingOrderByWithRelationInput[] = (() => {
     switch (sort) {
-      case "price_asc":  return { price: "asc" as const };
-      case "price_desc": return { price: "desc" as const };
-      case "area_asc":   return { area: "asc" as const };
-      default:           return { createdAt: "desc" as const };
+      case "price_asc":  return [{ price: "asc"  as const }, { id: "asc" as const }];
+      case "price_desc": return [{ price: "desc" as const }, { id: "asc" as const }];
+      case "area_asc":   return [{ area:  "asc"  as const }, { id: "asc" as const }];
+      default:           return [{ createdAt: "desc" as const }, { id: "asc" as const }];
     }
   })();
 

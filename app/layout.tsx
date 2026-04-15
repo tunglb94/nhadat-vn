@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { Providers } from "@/components/Providers";
 
 const inter = Inter({
   subsets: ["latin", "vietnamese"],
@@ -32,10 +33,12 @@ export default function RootLayout({
   return (
     <html lang="vi" className={inter.variable}>
       <body className="min-h-screen flex flex-col bg-gray-50">
-        <Navbar />
-        {/* pb-16 trên mobile để tránh bị bottom nav che */}
-        <main className="flex-1 pb-16 md:pb-0">{children}</main>
-        <Footer />
+        <Providers>
+          <Navbar />
+          {/* pb-16 trên mobile để tránh bị bottom nav che */}
+          <main className="flex-1 pb-16 md:pb-0">{children}</main>
+          <Footer />
+        </Providers>
       </body>
     </html>
   );

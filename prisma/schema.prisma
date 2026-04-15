@@ -49,17 +49,41 @@ model User {
   name          String
   email         String    @unique
   emailVerified DateTime?
+  password      String?   // null với Google users
   phone         String?
-  avatar        String?
+  image         String?   // NextAuth dùng "image", không phải "avatar"
   role          UserRole  @default(USER)
 
-  // Relations
+  // NextAuth relations
+  accounts      Account[]
+
+  // App relations
   listings      Listing[]
   savedListings SavedListing[]
   leads         Lead[]
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+}
+
+// Bắt buộc cho NextAuth PrismaAdapter (OAuth accounts)
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
 }
 
 // ─────────────────────────────────────────────────────────────

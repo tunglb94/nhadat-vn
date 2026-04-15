@@ -6,7 +6,7 @@ export type ListingWithImages = Listing & {
 
 export type ListingWithUser = Listing & {
   images: ListingImage[];
-  user: Pick<User, "id" | "name" | "phone" | "avatar">;
+  user: Pick<User, "id" | "name" | "phone" | "image">;
 };
 
 export type ListingCardData = Pick<

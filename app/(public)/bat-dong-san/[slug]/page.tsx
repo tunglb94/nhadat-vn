@@ -20,7 +20,7 @@ async function getListing(slug: string) {
     where: { slug },
     include: {
       images: { orderBy: { order: "asc" } },
-      user: { select: { id: true, name: true, phone: true, avatar: true } },
+      user: { select: { id: true, name: true, phone: true, image: true } },
     },
   });
   return listing;

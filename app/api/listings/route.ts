@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { auth } from "@/auth";
 import { generateSlug, calcPricePerM2 } from "@/lib/utils";
 import { ListingStatus } from "@prisma/client";
 import { z } from "zod";
@@ -29,14 +30,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const data = CreateListingSchema.parse(body);
 
-    // TODO: Lấy userId từ session (NextAuth)
-    // const session = await auth();
-    // if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    // Dùng userId cứng cho MVP — thay bằng session.user.id sau khi tích hợp Auth
-    const demoUser = await db.user.findFirst({ where: { role: "AGENT" } });
-    if (!demoUser) {
-      return NextResponse.json({ error: "Không tìm thấy user" }, { status: 400 });
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Chưa đăng nhập" }, { status: 401 });
     }
 
     const pricePerM2 = calcPricePerM2(data.price, data.area);
@@ -49,7 +45,7 @@ export async function POST(req: NextRequest) {
     const listing = await db.listing.create({
       data: {
         ...data,
-        userId: demoUser.id,
+        userId: session.user.id,
         slug,
         pricePerM2,
         status: ListingStatus.PENDING,

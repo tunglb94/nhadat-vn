@@ -17,10 +17,28 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'fastly.picsum.photos', // Picsum đôi khi redirect qua CDN này
+        hostname: 'fastly.picsum.photos',
         port: '',
         pathname: '/**',
-      }
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com', // Google OAuth avatar
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.chotot.com', // Ảnh crawl từ chotot.com
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.chotot.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
 };
